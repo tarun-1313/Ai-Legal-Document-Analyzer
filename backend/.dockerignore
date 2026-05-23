@@ -1,0 +1,22 @@
+.venv
+myenv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.env
+datasets
+models
+legalbert_model
+"legalbert model"
+chroma_data
+uploads
+.ipynb_checkpoints
+.git
+.gitignore
+node_modules
+dist
+build
+.dockerignore
+Dockerfile
+docker-compose.yml

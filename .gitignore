@@ -1,0 +1,77 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Environment Variables
+.env
+
+# Node Modules
+node_modules/
+
+# React Build
+dist/
+build/
+
+# Logs
+logs/
+*.log
+
+# Uploads & Generated Files
+uploads/
+generated_reports/
+temp/
+
+# ChromaDB
+chroma_data/
+
+# ML Models
+legalbert_model/
+models/
+*.safetensors
+*.bin
+*.pt
+
+# VS Code
+.vscode/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# MongoDB
+mongodb_data/
+
+# Docker
+*.tar
+
+# Cache
+.cache/
+
+# Testing
+coverage/
+pytest_cache/
+
+# Media Files
+*.mp4
+*.avi
+*.mov
+
+# PDFs & Docs (optional)
+*.pdf
+# Virtual Environment
+myenv/
+backend/myenv/
+.venv/
+venv/
+env/

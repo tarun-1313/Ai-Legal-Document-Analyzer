@@ -1,0 +1,57 @@
+# FastAPI & Server
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+python-multipart==0.0.9
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.1.3
+
+# MongoDB
+motor==3.4.0
+pymongo==4.7.3
+beanie==1.26.0
+dnspython==2.8.0
+certifi==2026.2.25
+
+# AI / LLM
+openai==1.35.3
+langchain==0.2.5
+langchain-huggingface==0.0.3
+langchain-community==0.2.5
+langchain-text-splitters==0.2.1
+sentence-transformers==3.0.1
+accelerate>=0.21.0
+safetensors==0.4.3
+
+# Vector DB
+chromadb==0.5.0
+
+# PyTorch (CPU for Docker, swap for GPU)
+torch==2.3.1
+transformers==4.41.2
+scikit-learn==1.5.0
+numpy==1.26.4
+
+# OCR & PDF
+pypdf2==3.0.1
+pytesseract==0.3.10
+pdf2image==1.17.0
+Pillow==10.3.0
+
+# PDF Report Generation
+reportlab==4.2.0
+fpdf2==2.7.9
+
+# Utilities
+pydantic==2.7.4
+pydantic-settings==2.3.3
+python-dotenv==1.0.1
+httpx==0.27.0
+aiofiles==23.2.1
+slowapi==0.1.9
+tenacity==8.3.0
+pandas==2.2.2
+matplotlib==3.9.0
+seaborn==0.13.2
+ipykernel==6.29.4
+optuna==3.6.1
