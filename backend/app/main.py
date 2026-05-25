@@ -12,107 +12,186 @@ import time
 
 from app.config import settings
 from app.database import connect_to_mongo, close_mongo_connection
-from app.routes import auth, documents, chatbot, analytics, localization
+
+# IMPORT ONLY AUTH TEMPORARILY
+from app.routes import auth
+
 from app.utils.logging_utils import setup_logging, get_logger
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-# Initialize Logging
+
+# =========================
+# Logging
+# =========================
 setup_logging()
 logger = get_logger("main")
 
-# Initialize Limiter
+
+# =========================
+# Rate Limiter
+# =========================
 limiter = Limiter(key_func=get_remote_address)
 
 
+# =========================
+# Lifespan
+# =========================
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup and shutdown events."""
-    # Startup
+
     logger.info("Starting application startup sequence...")
+
     try:
-        await connect_to_mongo()
         os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
         os.makedirs(settings.CHROMA_PERSIST_DIR, exist_ok=True)
-        logger.info(f"App {settings.APP_NAME} v{settings.APP_VERSION} ready!")
+
+        logger.info("Directories created successfully")
+
+        try:
+            await connect_to_mongo()
+            logger.info("MongoDB connected successfully")
+
+        except Exception as mongo_error:
+            logger.error(f"MongoDB connection failed: {mongo_error}")
+
+        logger.info(
+            f"{settings.APP_NAME} v{settings.APP_VERSION} started successfully"
+        )
+
     except Exception as e:
-        logger.error(f"Critical startup error: {e}")
-        raise e
-        
+        logger.error(f"Startup error: {e}", exc_info=True)
+
     yield
-    # Shutdown
-    logger.info("Shutting down...")
-    await close_mongo_connection()
+
+    logger.info("Shutting down application...")
+
+    try:
+        await close_mongo_connection()
+
+    except Exception as e:
+        logger.error(f"Shutdown error: {e}")
 
 
+# =========================
+# FastAPI App
+# =========================
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="AI-powered legal document analysis platform with RAG, clause classification, and risk detection.",
+    description="AI-powered legal document analysis platform",
     lifespan=lifespan,
 )
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# ─── Middleware & Global Handlers ──────────────────────────
+
+# =========================
+# Rate Limit
+# =========================
+app.state.limiter = limiter
+
+app.add_exception_handler(
+    RateLimitExceeded,
+    _rate_limit_exceeded_handler
+)
+
+
+# =========================
+# Request Logging
+# =========================
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+
     start_time = time.time()
+
     response = await call_next(request)
+
     process_time = (time.time() - start_time) * 1000
-    logger.info(f"{request.method} {request.url.path} - {response.status_code} ({process_time:.2f}ms)")
+
+    logger.info(
+        f"{request.method} {request.url.path} "
+        f"- {response.status_code} "
+        f"({process_time:.2f}ms)"
+    )
+
     return response
 
 
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unhandled error: {str(exc)}", exc_info=True)
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "An unexpected error occurred. Please try again later."},
-    )
-
-
+# =========================
+# Security Headers
+# =========================
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
+
     response = await call_next(request)
+
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-    response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none';"
+
     return response
 
 
-# ─── CORS Middleware ──────────────────────────────────────────────
+# =========================
+# Global Exception Handler
+# =========================
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+
+    logger.error(f"Unhandled error: {str(exc)}", exc_info=True)
+
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": "Internal server error"
+        },
+    )
+
+
+# =========================
+# CORS
+# =========================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ─── Register Routes ─────────────────────────────────────────────
+
+# =========================
+# ROUTES
+# =========================
 app.include_router(auth.router)
-app.include_router(documents.router)
-app.include_router(chatbot.router)
-app.include_router(analytics.router)
-app.include_router(localization.router)
+
+# TEMPORARILY DISABLED
+# app.include_router(documents.router)
+# app.include_router(chatbot.router)
+# app.include_router(analytics.router)
+# app.include_router(localization.router)
 
 
-@app.get("/", tags=["Health"])
+# =========================
+# Root Endpoint
+# =========================
+@app.get("/")
 async def root():
+
     return {
-        "app": settings.APP_NAME,
-        "version": settings.APP_VERSION,
         "status": "running",
-        "docs": "/docs",
+        "app": settings.APP_NAME,
+        "version": settings.APP_VERSION
     }
 
 
-@app.get("/health", tags=["Health"])
+# =========================
+# Health Endpoint
+# =========================
+@app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+
+    return {
+        "status": "healthy"
+    }
