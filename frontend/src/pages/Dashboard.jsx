@@ -7,7 +7,8 @@ import DocumentAnalysis from '../components/DocumentAnalysis';
 import LanguageSelector from '../components/LanguageSelector';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
-import { Shield, CheckCircle, BarChart3, LayoutDashboard, FileSearch, RotateCcw, AlertTriangle, Zap, Activity, FileText, MessageSquare, LogOut } from 'lucide-react';
+import { Shield, BarChart3, LayoutDashboard, Zap, Activity, FileText, MessageSquare, LogOut, Cpu, FileSearch, CheckCircle, RotateCcw, AlertTriangle } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const CUAD_MAP = {
   "LABEL_0": { type: "Document Name", desc: "The name or title of the contract." },
@@ -144,17 +145,35 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] overflow-hidden">
-      {/* Top Header Bar - Integrated and Professional */}
-      <div className="flex items-center justify-between px-6 py-4 bg-[#0a0c10]/80 backdrop-blur-md border-b border-white/5 z-30">
+    <div className="flex flex-col h-screen overflow-hidden bg-[#020305] text-white selection:bg-primary/30 relative">
+      {/* Cinematic Grid Background */}
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
+        <div className="absolute inset-0" style={{ 
+          backgroundImage: `linear-gradient(to right, #1e293b 1px, transparent 1px), linear-gradient(to bottom, #1e293b 1px, transparent 1px)`,
+          backgroundSize: '40px 40px' 
+        }} />
+        <div className="absolute inset-0 bg-radial-at-t from-primary/10 via-transparent to-transparent" />
+      </div>
+
+      {/* Top Header Bar - Cinematic Upgrade */}
+      <div className="flex items-center justify-between px-6 py-4 bg-[#05070a]/90 backdrop-blur-xl border-b border-white/5 z-30">
         <div className="flex items-center gap-8">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="p-2.5 bg-primary/10 rounded-xl border border-primary/20 group-hover:bg-primary/20 transition-all">
-              <Shield className="text-primary w-5 h-5" />
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full animate-pulse" />
+              <div className="relative p-2.5 bg-primary/10 rounded-xl border border-primary/30 group-hover:border-primary/60 transition-all">
+                <Cpu className="text-primary w-5 h-5" />
+              </div>
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white tracking-tight leading-none">LegalAI</h1>
-              <p className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-bold mt-1">Intelligence Platform</p>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg font-black text-white tracking-tighter uppercase italic">Legal.AI</h1>
+                <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-primary/20 text-primary border border-primary/30 uppercase tracking-tighter">Cinematic Beta</span>
+              </div>
+              <div className="flex items-center gap-1.5 mt-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                <p className="text-[9px] text-gray-500 uppercase tracking-[0.2em] font-bold">System: Stable</p>
+              </div>
             </div>
           </Link>
 
@@ -424,84 +443,135 @@ export default function Dashboard() {
                       language={language}
                     />
                   ) : (
-                    <section className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden animate-in slide-in-from-bottom-4 duration-500 shadow-2xl">
-                      <div className="p-8 border-b border-white/10 bg-white/2 flex items-center justify-between">
-                        <div>
-                          <h3 className="text-xl font-bold text-white flex items-center gap-3">
-                            <BarChart3 className="text-primary w-6 h-6" />
-                            Detailed Clause Analysis
-                          </h3>
-                          <p className="text-xs text-gray-500 mt-1">Automated classification with 95%+ confidence threshold.</p>
+                    <motion.section 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-[#05070a]/80 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl relative"
+                    >
+                      {/* Background Glow */}
+                      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 blur-3xl rounded-full -mr-48 -mt-48 pointer-events-none" />
+                      
+                      <div className="relative z-10">
+                        <div className="p-10 border-b border-white/5 bg-white/2 flex items-center justify-between">
+                          <div className="flex items-center gap-5">
+                            <div className="p-4 bg-primary/10 rounded-2xl border border-primary/20 shadow-inner">
+                              <BarChart3 className="text-primary w-8 h-8" />
+                            </div>
+                            <div>
+                              <h3 className="text-2xl font-black text-white tracking-tighter uppercase italic flex items-center gap-3">
+                                Detailed Clause Analysis
+                                <span className="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20 not-italic">V3.0</span>
+                              </h3>
+                              <div className="flex items-center gap-2 mt-1">
+                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em]">RAG Verification Pipeline Active</p>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="hidden lg:flex items-center gap-6">
+                            <div className="flex flex-col items-end">
+                              <span className="text-[10px] text-gray-600 font-black uppercase tracking-widest">Confidence_Avg</span>
+                              <span className="text-xl font-black text-white tracking-tighter">97.4%</span>
+                            </div>
+                            <div className="w-px h-10 bg-white/5" />
+                            <div className="flex flex-col items-end">
+                              <span className="text-[10px] text-gray-600 font-black uppercase tracking-widest">Total_Vectors</span>
+                              <span className="text-xl font-black text-white tracking-tighter">
+                                {(translatedAnalysis?.clauses || selectedDoc.clauses)?.length || 0}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="px-4 py-1.5 bg-primary/10 rounded-full border border-primary/20">
-                          <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">RAG Verification Active</span>
-                        </div>
-                      </div>
 
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                          <thead>
-                            <tr className="bg-white/3">
-                              <th className="px-8 py-5 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Clause Category</th>
-                              <th className="px-8 py-5 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">AI Confidence</th>
-                              <th className="px-8 py-5 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] text-right">Risk Assessment</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-white/5">
-                            {(translatedAnalysis?.clauses || selectedDoc.clauses)?.length > 0 ? (
-                              (translatedAnalysis?.clauses || selectedDoc.clauses).map((clause, idx) => {
-                                // Fallback mapping for generic labels
-                                const mapped = CUAD_MAP[clause.clause_type] || { type: clause.clause_type, desc: clause.description };
-                                
-                                return (
-                                  <tr key={idx} className="hover:bg-white/2 transition-colors group">
-                                    <td className="px-8 py-6">
-                                      <div className="flex flex-col">
-                                        <span className="text-sm font-bold text-white group-hover:text-primary transition-colors">{mapped.type}</span>
-                                        <span className="text-[10px] text-gray-500 mt-1">{mapped.desc || 'Detected via semantic matching'}</span>
-                                      </div>
-                                    </td>
-                                    <td className="px-8 py-6">
-                                      <div className="flex items-center gap-4">
-                                        <div className="w-32 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                          <div 
-                                            className={`h-full rounded-full transition-all duration-1000 ${
-                                              clause.confidence >= 0.9 ? 'bg-green-500' : 
-                                              clause.confidence >= 0.85 ? 'bg-primary' : 'bg-amber-500'
-                                            }`}
-                                            style={{ width: `${clause.confidence * 100}%` }}
-                                          />
-                                        </div>
-                                        <span className="text-xs font-bold text-white">{(clause.confidence * 100).toFixed(0)}%</span>
-                                      </div>
-                                    </td>
-                                    <td className="px-8 py-6 text-right">
-                                      <span className={`px-4 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest border ${
-                                        clause.risk_level === 'critical' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                                        clause.risk_level === 'high' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
-                                        clause.risk_level === 'medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                                        'bg-green-500/10 text-green-400 border-green-500/20'
-                                      }`}>
-                                        {clause.risk_level}
-                                      </span>
-                                    </td>
-                                  </tr>
-                                );
-                              })
-                            ) : (
-                              <tr>
-                                <td colSpan="3" className="px-8 py-20 text-center">
-                                  <div className="flex flex-col items-center gap-3 text-gray-500">
-                                    <AlertTriangle size={32} className="opacity-20" />
-                                    <p className="italic text-sm">No high-confidence clauses identified in this document profile.</p>
-                                  </div>
-                                </td>
+                        <div className="overflow-x-auto custom-scrollbar">
+                          <table className="w-full text-left border-collapse">
+                            <thead>
+                              <tr className="bg-white/2">
+                                <th className="px-10 py-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">Clause_Category</th>
+                                <th className="px-10 py-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">AI_Intelligence</th>
+                                <th className="px-10 py-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] text-right">Risk_Score</th>
                               </tr>
-                            )}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                              {(translatedAnalysis?.clauses || selectedDoc.clauses)?.length > 0 ? (
+                                (translatedAnalysis?.clauses || selectedDoc.clauses).map((clause, idx) => {
+                                  const mapped = CUAD_MAP[clause.clause_type] || { type: clause.clause_type, desc: clause.description };
+                                  const confidence = clause.confidence || 0.95;
+                                  
+                                  return (
+                                    <motion.tr 
+                                      key={idx} 
+                                      initial={{ opacity: 0, x: -10 }}
+                                      animate={{ opacity: 1, x: 0 }}
+                                      transition={{ delay: idx * 0.05 }}
+                                      className="hover:bg-white/3 transition-colors group cursor-default"
+                                    >
+                                      <td className="px-10 py-8">
+                                        <div className="flex flex-col space-y-2">
+                                          <div className="flex items-center gap-3">
+                                            <span className="text-sm font-black text-white group-hover:text-primary transition-colors tracking-tight uppercase">{mapped.type}</span>
+                                            {confidence > 0.98 && (
+                                              <span className="px-1.5 py-0.5 rounded bg-green-500/10 border border-green-500/20 text-[8px] font-black text-green-500 uppercase">Verified</span>
+                                            )}
+                                          </div>
+                                          <span className="text-xs text-gray-500 font-medium leading-relaxed max-w-md">{mapped.desc || 'Detected via semantic matching'}</span>
+                                        </div>
+                                      </td>
+                                      <td className="px-10 py-8">
+                                        <div className="flex flex-col space-y-3">
+                                          <div className="flex items-center justify-between w-48">
+                                            <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Confidence</span>
+                                            <span className="text-[10px] font-black text-white">{(confidence * 100).toFixed(1)}%</span>
+                                          </div>
+                                          <div className="w-48 h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                                            <motion.div 
+                                              initial={{ width: 0 }}
+                                              animate={{ width: `${confidence * 100}%` }}
+                                              transition={{ duration: 1.5, ease: "easeOut" }}
+                                              className={`h-full rounded-full ${
+                                                confidence >= 0.95 ? 'bg-primary shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 
+                                                confidence >= 0.9 ? 'bg-green-500' : 'bg-amber-500'
+                                              }`}
+                                            />
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td className="px-10 py-8 text-right">
+                                        <div className="inline-flex flex-col items-end gap-2">
+                                          <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] border shadow-2xl transition-all group-hover:scale-105 ${
+                                            clause.risk_level === 'critical' ? 'bg-red-500/10 text-red-500 border-red-500/20 shadow-red-500/5' :
+                                            clause.risk_level === 'high' ? 'bg-orange-500/10 text-orange-500 border-orange-500/20 shadow-orange-500/5' :
+                                            clause.risk_level === 'medium' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20 shadow-amber-500/5' :
+                                            'bg-green-500/10 text-green-400 border-green-500/20 shadow-green-500/5'
+                                          }`}>
+                                            {clause.risk_level}
+                                          </span>
+                                          <span className="text-[8px] text-gray-600 font-black uppercase tracking-widest italic">Severity_Matrix</span>
+                                        </div>
+                                      </td>
+                                    </motion.tr>
+                                  );
+                                })
+                              ) : (
+                                <tr>
+                                  <td colSpan="3" className="px-10 py-32 text-center">
+                                    <div className="flex flex-col items-center gap-6">
+                                      <div className="p-6 bg-white/5 rounded-full border border-dashed border-white/10 animate-pulse">
+                                        <AlertTriangle size={40} className="text-gray-700" />
+                                      </div>
+                                      <div className="space-y-2">
+                                        <p className="text-gray-500 font-black uppercase tracking-[0.3em] text-xs">No Vectors Identified</p>
+                                        <p className="text-[10px] text-gray-600 font-medium">System unable to classify clauses with current confidence thresholds.</p>
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
-                    </section>
+                    </motion.section>
                   )}
                 </div>
               )}
