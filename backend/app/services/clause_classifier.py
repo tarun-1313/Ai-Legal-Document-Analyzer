@@ -26,6 +26,50 @@ CUAD_CLAUSE_TYPES = [
     "Insurance", "Covenant Not To Sue", "Third Party Beneficiary",
 ]
 
+CUAD_DESCRIPTIONS = {
+    "Document Name": "The name or title of the contract.",
+    "Parties": "The entities or individuals entering into the agreement.",
+    "Agreement Date": "The date the contract was signed or executed.",
+    "Effective Date": "The date when the contract terms officially begin.",
+    "Expiration Date": "The date when the contract naturally ends.",
+    "Renewal Term": "Terms for extending the contract after the initial period.",
+    "Notice Period To Terminate Renewal": "Time required to notify the other party of non-renewal.",
+    "Governing Law": "The jurisdiction/laws that apply to this contract.",
+    "Most Favored Nation": "Guaranteeing the buyer the best terms offered to others.",
+    "Non-Compete": "Restriction on starting or joining a competing business.",
+    "Exclusivity": "Sole rights given to a party to provide or receive goods/services.",
+    "No-Solicit Of Customers": "Prohibition on approaching the other party's clients.",
+    "No-Solicit Of Employees": "Prohibition on hiring the other party's staff.",
+    "Non-Disparagement": "Agreement not to say negative things about the other party.",
+    "Termination For Convenience": "Right to end the contract without needing a specific reason.",
+    "Rofr/Rofo/Rofn": "Right of First Refusal/Offer/Negotiation for future deals.",
+    "Change Of Control": "Rights triggered if a party is acquired or merged.",
+    "Anti-Assignment": "Restrictions on transferring contract rights to others.",
+    "Revenue/Profit Sharing": "Requirement to share earnings with the other party.",
+    "Price Restrictions": "Limits on changing prices for goods or services.",
+    "Minimum Commitment": "Minimum purchase or performance requirements.",
+    "Volume Restriction": "Limits on the quantity of goods or services provided.",
+    "Ip Ownership Assignment": "Transfer of intellectual property rights to a party.",
+    "Joint Ip Ownership": "Shared ownership of intellectual property created.",
+    "License Grant": "Permission given to use certain property or technology.",
+    "Non-Transferable License": "License that cannot be passed to another party.",
+    "Affiliate License-Licensor": "License extended from the licensor's affiliates.",
+    "Affiliate License-Licensee": "License extended to the licensee's affiliates.",
+    "Unlimited/All-You-Can-Eat-License": "Usage license without volume or seat limits.",
+    "Irrevocable Or Perpetual License": "License that cannot be taken back or never expires.",
+    "Source Code Escrow": "Depositing code with a third party for safety.",
+    "Post-Termination Services": "Help or services provided after the contract ends.",
+    "Competing Activities": "Limits on engaging in specific business activities.",
+    "Audit Rights": "Right to inspect records to ensure compliance.",
+    "Uncapped Liability": "No limit on the amount of damages a party may pay.",
+    "Cap On Liability": "Maximum limit on financial damages for a breach.",
+    "Liquidated Damages": "Pre-agreed penalty amount for specific contract breaches.",
+    "Warranty Duration": "The time period during which a warranty is valid.",
+    "Insurance": "Requirement to maintain specific insurance coverage.",
+    "Covenant Not To Sue": "Agreement not to bring legal action against a party.",
+    "Third Party Beneficiary": "A non-signer who still gains rights from the contract.",
+}
+
 RISK_WEIGHTS = {
     "Uncapped Liability": 0.95, "Non-Compete": 0.85, "Exclusivity": 0.80,
     "Anti-Assignment": 0.75, "Termination For Convenience": 0.70,
@@ -169,10 +213,15 @@ class CUADClassifier:
             idx = indices[0][i].item()
             label = self.id2label.get(idx, "Unknown")
             
+            # If label is a generic "LABEL_X", map it to our descriptive types
+            if label.startswith("LABEL_") and idx < len(CUAD_CLAUSE_TYPES):
+                label = CUAD_CLAUSE_TYPES[idx]
+            
             # STRICT REQUIREMENT: Only show results with confidence > 75%
             if conf >= 0.75:
                 results.append({
                     "clause_type": label,
+                    "description": CUAD_DESCRIPTIONS.get(label, "Detected via semantic matching"),
                     "confidence": round(conf, 4),
                     "risk_weight": RISK_WEIGHTS.get(label, 0.3),
                 })
@@ -204,6 +253,7 @@ class CUADClassifier:
                 
                 clause_data = {
                     "clause_type": clause_type,
+                    "description": cls.get("description", "Detected via semantic matching"),
                     "text": chunk[:800],  # Increased preview length
                     "confidence": cls["confidence"],
                     "risk_level": risk_level,

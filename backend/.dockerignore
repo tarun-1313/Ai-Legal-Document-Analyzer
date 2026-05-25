@@ -1,22 +1,42 @@
-.venv
-myenv
-__pycache__
+# Python
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.log
+
+# Virtual Environment
+.venv
+venv
+myenv
+
+# Environment Variables
 .env
-datasets
-models
-legalbert_model
-"legalbert model"
-chroma_data
-uploads
-.ipynb_checkpoints
-.git
+
+# Models & Datasets
+datasets/
+models/
+legalbert_model/
+legalbert model/
+
+# Generated Data
+uploads/
+chroma_data/
+reports/
+
+# Notebook
+.ipynb_checkpoints/
+
+# Git
+.git/
 .gitignore
-node_modules
-dist
-build
-.dockerignore
+
+# Frontend
+node_modules/
+dist/
+build/
+
+# Docker
 Dockerfile
 docker-compose.yml
+.dockerignore

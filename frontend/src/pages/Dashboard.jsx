@@ -9,6 +9,50 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { Shield, CheckCircle, BarChart3, LayoutDashboard, FileSearch, RotateCcw, AlertTriangle, Zap, Activity, FileText, MessageSquare, LogOut } from 'lucide-react';
 
+const CUAD_MAP = {
+  "LABEL_0": { type: "Document Name", desc: "The name or title of the contract." },
+  "LABEL_1": { type: "Parties", desc: "The entities or individuals entering into the agreement." },
+  "LABEL_2": { type: "Agreement Date", desc: "The date the contract was signed or executed." },
+  "LABEL_3": { type: "Effective Date", desc: "The date when the contract terms officially begin." },
+  "LABEL_4": { type: "Expiration Date", desc: "The date when the contract naturally ends." },
+  "LABEL_5": { type: "Renewal Term", desc: "Terms for extending the contract after the initial period." },
+  "LABEL_6": { type: "Notice Period To Terminate Renewal", desc: "Time required to notify the other party of non-renewal." },
+  "LABEL_7": { type: "Governing Law", desc: "The jurisdiction/laws that apply to this contract." },
+  "LABEL_8": { type: "Most Favored Nation", desc: "Guaranteeing the buyer the best terms offered to others." },
+  "LABEL_9": { type: "Non-Compete", desc: "Restriction on starting or joining a competing business." },
+  "LABEL_10": { type: "Exclusivity", desc: "Sole rights given to a party to provide or receive goods/services." },
+  "LABEL_11": { type: "No-Solicit Of Customers", desc: "Prohibition on approaching the other party's clients." },
+  "LABEL_12": { type: "No-Solicit Of Employees", desc: "Prohibition on hiring the other party's staff." },
+  "LABEL_13": { type: "Non-Disparagement", desc: "Agreement not to say negative things about the other party." },
+  "LABEL_14": { type: "Termination For Convenience", desc: "Right to end the contract without needing a specific reason." },
+  "LABEL_15": { type: "Rofr/Rofo/Rofn", desc: "Right of First Refusal/Offer/Negotiation for future deals." },
+  "LABEL_16": { type: "Change Of Control", desc: "Rights triggered if a party is acquired or merged." },
+  "LABEL_17": { type: "Anti-Assignment", desc: "Restrictions on transferring contract rights to others." },
+  "LABEL_18": { type: "Revenue/Profit Sharing", desc: "Requirement to share earnings with the other party." },
+  "LABEL_19": { type: "Price Restrictions", desc: "Limits on changing prices for goods or services." },
+  "LABEL_20": { type: "Minimum Commitment", desc: "Minimum purchase or performance requirements." },
+  "LABEL_21": { type: "Volume Restriction", desc: "Limits on the quantity of goods or services provided." },
+  "LABEL_22": { type: "Ip Ownership Assignment", desc: "Transfer of intellectual property rights to a party." },
+  "LABEL_23": { type: "Joint Ip Ownership", desc: "Shared ownership of intellectual property created." },
+  "LABEL_24": { type: "License Grant", desc: "Permission given to use certain property or technology." },
+  "LABEL_25": { type: "Non-Transferable License", desc: "License that cannot be passed to another party." },
+  "LABEL_26": { type: "Affiliate License-Licensor", desc: "License extended from the licensor's affiliates." },
+  "LABEL_27": { type: "Affiliate License-Licensee", desc: "License extended to the licensee's affiliates." },
+  "LABEL_28": { type: "Unlimited/All-You-Can-Eat-License", desc: "Usage license without volume or seat limits." },
+  "LABEL_29": { type: "Irrevocable Or Perpetual License", desc: "License that cannot be taken back or never expires." },
+  "LABEL_30": { type: "Source Code Escrow", desc: "Depositing code with a third party for safety." },
+  "LABEL_31": { type: "Post-Termination Services", desc: "Help or services provided after the contract ends." },
+  "LABEL_32": { type: "Competing Activities", desc: "Limits on engaging in specific business activities." },
+  "LABEL_33": { type: "Audit Rights", desc: "Right to inspect records to ensure compliance." },
+  "LABEL_34": { type: "Uncapped Liability", desc: "No limit on the amount of damages a party may pay." },
+  "LABEL_35": { type: "Cap On Liability", desc: "Maximum limit on financial damages for a breach." },
+  "LABEL_36": { type: "Liquidated Damages", desc: "Pre-agreed penalty amount for specific contract breaches." },
+  "LABEL_37": { type: "Warranty Duration", desc: "The time period during which a warranty is valid." },
+  "LABEL_38": { type: "Insurance", desc: "Requirement to maintain specific insurance coverage." },
+  "LABEL_39": { type: "Covenant Not To Sue", desc: "Agreement not to bring legal action against a party." },
+  "LABEL_40": { type: "Third Party Beneficiary", desc: "A non-signer who still gains rights from the contract." }
+};
+
 export default function Dashboard() {
   const { i18n } = useTranslation();
   const navigate = useNavigate();
@@ -405,40 +449,45 @@ export default function Dashboard() {
                           </thead>
                           <tbody className="divide-y divide-white/5">
                             {(translatedAnalysis?.clauses || selectedDoc.clauses)?.length > 0 ? (
-                              (translatedAnalysis?.clauses || selectedDoc.clauses).map((clause, idx) => (
-                                <tr key={idx} className="hover:bg-white/2 transition-colors group">
-                                  <td className="px-8 py-6">
-                                    <div className="flex flex-col">
-                                      <span className="text-sm font-bold text-white group-hover:text-primary transition-colors">{clause.clause_type}</span>
-                                      <span className="text-[10px] text-gray-500 mt-1">Detected via semantic matching</span>
-                                    </div>
-                                  </td>
-                                  <td className="px-8 py-6">
-                                    <div className="flex items-center gap-4">
-                                      <div className="w-32 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                        <div 
-                                          className={`h-full rounded-full transition-all duration-1000 ${
-                                            clause.confidence >= 0.9 ? 'bg-green-500' : 
-                                            clause.confidence >= 0.85 ? 'bg-primary' : 'bg-amber-500'
-                                          }`}
-                                          style={{ width: `${clause.confidence * 100}%` }}
-                                        />
+                              (translatedAnalysis?.clauses || selectedDoc.clauses).map((clause, idx) => {
+                                // Fallback mapping for generic labels
+                                const mapped = CUAD_MAP[clause.clause_type] || { type: clause.clause_type, desc: clause.description };
+                                
+                                return (
+                                  <tr key={idx} className="hover:bg-white/2 transition-colors group">
+                                    <td className="px-8 py-6">
+                                      <div className="flex flex-col">
+                                        <span className="text-sm font-bold text-white group-hover:text-primary transition-colors">{mapped.type}</span>
+                                        <span className="text-[10px] text-gray-500 mt-1">{mapped.desc || 'Detected via semantic matching'}</span>
                                       </div>
-                                      <span className="text-xs font-bold text-white">{(clause.confidence * 100).toFixed(0)}%</span>
-                                    </div>
-                                  </td>
-                                  <td className="px-8 py-6 text-right">
-                                    <span className={`px-4 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest border ${
-                                      clause.risk_level === 'critical' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                                      clause.risk_level === 'high' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
-                                      clause.risk_level === 'medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                                      'bg-green-500/10 text-green-400 border-green-500/20'
-                                    }`}>
-                                      {clause.risk_level}
-                                    </span>
-                                  </td>
-                                </tr>
-                              ))
+                                    </td>
+                                    <td className="px-8 py-6">
+                                      <div className="flex items-center gap-4">
+                                        <div className="w-32 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                          <div 
+                                            className={`h-full rounded-full transition-all duration-1000 ${
+                                              clause.confidence >= 0.9 ? 'bg-green-500' : 
+                                              clause.confidence >= 0.85 ? 'bg-primary' : 'bg-amber-500'
+                                            }`}
+                                            style={{ width: `${clause.confidence * 100}%` }}
+                                          />
+                                        </div>
+                                        <span className="text-xs font-bold text-white">{(clause.confidence * 100).toFixed(0)}%</span>
+                                      </div>
+                                    </td>
+                                    <td className="px-8 py-6 text-right">
+                                      <span className={`px-4 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest border ${
+                                        clause.risk_level === 'critical' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                                        clause.risk_level === 'high' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                                        clause.risk_level === 'medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                                        'bg-green-500/10 text-green-400 border-green-500/20'
+                                      }`}>
+                                        {clause.risk_level}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              })
                             ) : (
                               <tr>
                                 <td colSpan="3" className="px-8 py-20 text-center">

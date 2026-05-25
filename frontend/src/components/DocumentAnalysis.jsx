@@ -19,13 +19,74 @@ import {
   Scale
 } from 'lucide-react';
 
+// Global variable to track current audio playback
+let currentAudioInstance = null;
+
 const speak = (text, lang = 'en') => {
+  try {
+    // 1. Stop any ongoing browser speech synthesis
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+
+    // 2. Stop any ongoing cloud audio playback
+    if (currentAudioInstance) {
+      currentAudioInstance.pause();
+      currentAudioInstance.src = "";
+      currentAudioInstance = null;
+    }
+
+    if (!text || text.trim().length === 0) return;
+
+    // 3. Map internal codes to Google TTS language codes
+    const langMap = {
+      "en": "en", "hi": "hi", "mr": "mr", "pa": "pa",
+      "gu": "gu", "ta": "ta", "te": "te", "kn": "kn",
+      "ml": "ml", "bn": "bn", "ur": "ur", "or": "or",
+      "as": "as", "sa": "sa", "es": "es", "fr": "fr",
+      "de": "de", "ar": "ar"
+    };
+
+    const targetLang = langMap[lang.split('-')[0]] || 'en';
+    const encodedText = encodeURIComponent(text);
+    
+    // 4. Generate Google Translate TTS URL
+    const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=${targetLang}&client=tw-ob`;
+    
+    // 5. Play audio using the browser Audio object
+    const audio = new Audio(audioUrl);
+    currentAudioInstance = audio;
+
+    audio.play().catch((err) => {
+      console.warn("Cloud TTS playback failed, falling back to System TTS:", err);
+      // 6. Fallback to browser speech synthesis if audio streaming fails
+      useSystemTTS(text, targetLang);
+    });
+
+  } catch (error) {
+    console.error("Speech Error:", error);
+    // Final fallback attempt
+    const baseLang = lang.split('-')[0];
+    useSystemTTS(text, baseLang);
+  }
+};
+
+const useSystemTTS = (text, targetLang) => {
   if (!window.speechSynthesis) return;
-  // Cancel any current speech
-  window.speechSynthesis.cancel();
   
+  window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = lang === 'en' ? 'en-US' : lang; // Map codes if needed
+  
+  // Map back to BCP-47 for system voices
+  const systemLangMap = {
+    "en": "en-US", "hi": "hi-IN", "mr": "mr-IN", "pa": "pa-IN",
+    "gu": "gu-IN", "ta": "ta-IN", "te": "te-IN", "kn": "kn-IN",
+    "ml": "ml-IN", "bn": "bn-IN", "ur": "ur-PK", "or": "or-IN",
+    "as": "as-IN", "sa": "sa-IN", "es": "es-ES", "fr": "fr-FR",
+    "de": "de-DE", "ar": "ar-SA"
+  };
+  
+  utterance.lang = systemLangMap[targetLang] || targetLang;
   window.speechSynthesis.speak(utterance);
 };
 

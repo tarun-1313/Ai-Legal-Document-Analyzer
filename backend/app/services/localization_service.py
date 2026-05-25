@@ -11,6 +11,9 @@ from app.utils.json_utils import parse_json_robustly
 logger = get_logger("localization_service")
 router = SmartLLMRouter()
 
+# Global semaphore to limit concurrent translations and avoid rate limits
+translation_semaphore = asyncio.Semaphore(10)
+
 SUPPORTED_LANGUAGES = {
     "en": "English",
     "hi": "Hindi",
@@ -68,6 +71,22 @@ Original Legal Text:
 {text}
 
 Respond ONLY with the simplified version in English."""
+
+TRANSLATION_PROMPT = """You are a professional legal translator. Your task is to translate the provided JSON object containing legal document analysis into {target_language}.
+
+Instructions:
+1. Translate ONLY the values of the strings. Do NOT translate the keys.
+2. Maintain the exact same JSON structure.
+3. Use professional legal terminology appropriate for {target_language}.
+4. Ensure the translation is accurate, clear, and maintains the original legal meaning.
+5. If a value is a number or a short code (like "high", "critical", "low"), keep it in English if that is standard for the target culture's legal tech, otherwise translate it accurately.
+6. Return ONLY the valid JSON object. No markdown, no explanations.
+
+Target Language: {target_language}
+JSON to Translate:
+{json_content}
+
+Respond ONLY with valid JSON."""
 
 PROS_CONS_PROMPT = """You are a legal document auditor. Analyze the provided document context and generate a balanced list of Pros (Advantages) and Cons (Risks/Disadvantages) for the user.
 
@@ -136,11 +155,20 @@ async def translate_text(text: str, target_lang_code: str) -> str:
         # Perform translation using deep-translator (much faster than LLM)
         # Use a timeout or wrap in a thread to prevent blocking if needed
         # deep-translator is synchronous, so we run in executor
-        loop = asyncio.get_event_loop()
-        translated = await loop.run_in_executor(
-            None, 
-            lambda: GoogleTranslator(source='auto', target=target_lang).translate(text)
-        )
+        async with translation_semaphore:
+            loop = asyncio.get_event_loop()
+            try:
+                # Add a timeout to the translation call
+                translated = await asyncio.wait_for(
+                    loop.run_in_executor(
+                        None, 
+                        lambda: GoogleTranslator(source='auto', target=target_lang).translate(text)
+                    ),
+                    timeout=15.0 # 15 seconds timeout per string
+                )
+            except asyncio.TimeoutError:
+                logger.warning(f"Translation timed out for {target_lang}")
+                return text
         
         if not translated:
             return text
@@ -187,92 +215,82 @@ async def generate_pros_cons(context_chunks: List[str]) -> Dict[str, Any]:
         return {"pros": [], "cons": [], "hidden_risks": [], "financial_concerns": []}
 
 async def translate_analysis_result(analysis: Dict[str, Any], target_lang_code: str) -> Dict[str, Any]:
-    """Translate a full analysis result into the target language using fast translator."""
-    if target_lang_code == "en":
+    """Translate a full analysis result into the target language using LLM (Fast & High Quality)."""
+    if not analysis or target_lang_code == "en":
         return analysis
         
+    target_language = SUPPORTED_LANGUAGES.get(target_lang_code, "Hindi")
+    logger.info(f"Translating full analysis to {target_language} using LLM...")
+    
+    import json
+    # Use LLM for translation - it's much faster than 100+ separate Google Translate calls
+    # and handles legal nuances much better.
+    try:
+        # We only translate the main content areas to keep token count reasonable
+        # but the prompt handles recursive translation of the whole JSON.
+        llm = await router.run(
+            task="translation",
+            system=f"You are a professional legal translator specializing in {target_language}.",
+            user=TRANSLATION_PROMPT.format(
+                target_language=target_language,
+                json_content=json.dumps(analysis, ensure_ascii=False)
+            ),
+            context_chunks=[], # Not needed for pure translation
+            prefer_fast=True, # Use a faster model for translation
+            require_json=True,
+            temperature=0.1, # Low temperature for accurate translation
+            max_tokens=4000,
+            groq_model=settings.GROQ_MODEL_FAST
+        )
+        
+        translated_json = parse_json_robustly(llm.text)
+        if translated_json and isinstance(translated_json, dict):
+            logger.info(f"LLM translation to {target_language} successful.")
+            return translated_json
+            
+    except Exception as e:
+        logger.error(f"LLM Translation failed: {e}. Falling back to individual string translation.")
+    
+    # Fallback to the slow recursive method if LLM fails
     import copy
     import asyncio
     translated = copy.deepcopy(analysis)
     
     tasks = []
     
-    # Summary
-    if "summary" in translated:
-        for key, value in translated["summary"].items():
-            if isinstance(value, str) and value.strip():
-                async def t_summary(k, v):
-                    translated["summary"][k] = await translate_text(v, target_lang_code)
-                tasks.append(t_summary(key, value))
-                
-    # Easy Summary
-    if "easy_summary" in translated and translated["easy_summary"]:
-        for key, value in translated["easy_summary"].items():
-            if isinstance(value, str) and value.strip():
-                async def t_easy_summary(k, v):
-                    translated["easy_summary"][k] = await translate_text(v, target_lang_code)
-                tasks.append(t_easy_summary(key, value))
+    # Define a helper to recursively find and translate strings
+    async def process_recursive(obj, key=None, parent=None):
+        if isinstance(obj, str) and obj.strip() and len(obj) > 1:
+            # Skip keys that shouldn't be translated
+            if key in ["id", "_id", "status", "risk_level", "severity", "color", "risk_score", "score", "progress"]:
+                return
+            
+            if len(obj) < 2:
+                return
 
-    # Key Points
-    if "key_points" in translated:
-        for i, item in enumerate(translated["key_points"]):
-            if "point" in item:
-                async def t_kp(idx, p):
-                    translated["key_points"][idx]["point"] = await translate_text(p, target_lang_code)
-                tasks.append(t_kp(i, item["point"]))
-            if "category" in item:
-                async def t_cat(idx, c):
-                    translated["key_points"][idx]["category"] = await translate_text(c, target_lang_code)
-                tasks.append(t_cat(i, item["category"]))
-                
-    # Risk Analysis
-    if "risk_analysis" in translated:
-        for i, item in enumerate(translated["risk_analysis"]):
-            if "reason" in item:
-                async def t_risk(idx, r):
-                    translated["risk_analysis"][idx]["reason"] = await translate_text(r, target_lang_code)
-                tasks.append(t_risk(i, item["reason"]))
-            if "type" in item:
-                async def t_rtype(idx, t):
-                    translated["risk_analysis"][idx]["type"] = await translate_text(t, target_lang_code)
-                tasks.append(t_rtype(i, item["type"]))
-                
-    # Recommendations
-    if "recommendations" in translated:
-        for i, rec in enumerate(translated["recommendations"]):
-            async def t_rec(idx, r):
-                translated["recommendations"][idx] = await translate_text(r, target_lang_code)
-            tasks.append(t_rec(i, rec))
-        
-    # Pros/Cons sections
-    for section in ["pros", "cons", "hidden_risks", "financial_concerns"]:
-        if section in translated:
-            for i, item in enumerate(translated[section]):
-                if "title" in item:
-                    async def t_pc_title(s, idx, t):
-                        translated[s][idx]["title"] = await translate_text(t, target_lang_code)
-                    tasks.append(t_pc_title(section, i, item["title"]))
-                if "description" in item:
-                    async def t_pc_desc(s, idx, d):
-                        translated[s][idx]["description"] = await translate_text(d, target_lang_code)
-                    tasks.append(t_pc_desc(section, i, item["description"]))
-                    
-    # New Risk Intelligence Fields (will be added to analysis soon)
-    for section in ["risk_attention_areas", "potential_loss_areas", "safety_recommendations"]:
-        if section in translated:
-            for i, item in enumerate(translated[section]):
-                if isinstance(item, str):
-                    async def t_simple_str(s, idx, text):
-                        translated[s][idx] = await translate_text(text, target_lang_code)
-                    tasks.append(t_simple_str(section, i, item))
-                elif isinstance(item, dict):
-                    for k, v in item.items():
-                        if isinstance(v, str):
-                            async def t_dict_val(s, idx, key, val):
-                                translated[s][idx][key] = await translate_text(val, target_lang_code)
-                            tasks.append(t_dict_val(section, i, k, v))
+            async def t_task(o, k, p):
+                try:
+                    res = await translate_text(o, target_lang_code)
+                    if p is not None:
+                        p[k] = res
+                except Exception as e:
+                    logger.error(f"Error translating field {k}: {e}")
+
+            tasks.append(t_task(obj, key, parent))
+            
+        elif isinstance(obj, list):
+            for i, item in enumerate(obj):
+                await process_recursive(item, i, obj)
+        elif isinstance(obj, dict):
+            for k, v in obj.items():
+                await process_recursive(v, k, obj)
+
+    await process_recursive(translated)
 
     if tasks:
-        await asyncio.gather(*tasks)
+        batch_size = 10
+        for i in range(0, len(tasks), batch_size):
+            batch = tasks[i:i+batch_size]
+            await asyncio.gather(*batch)
                     
     return translated
