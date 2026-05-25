@@ -13,8 +13,8 @@ import time
 from app.config import settings
 from app.database import connect_to_mongo, close_mongo_connection
 
-# IMPORT ROUTES
-from app.routes import auth, documents, chatbot, analytics, localization
+# IMPORT ONLY AUTH ROUTE TEMPORARILY
+from app.routes import auth
 
 from app.utils.logging_utils import setup_logging, get_logger
 
@@ -23,33 +23,35 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 
-# =========================
-# Logging
-# =========================
+# =====================================================
+# Logging Setup
+# =====================================================
 setup_logging()
 logger = get_logger("main")
 
 
-# =========================
+# =====================================================
 # Rate Limiter
-# =========================
+# =====================================================
 limiter = Limiter(key_func=get_remote_address)
 
 
-# =========================
-# Lifespan
-# =========================
+# =====================================================
+# App Lifespan
+# =====================================================
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
     logger.info("Starting application startup sequence...")
 
     try:
+        # Create required directories
         os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
         os.makedirs(settings.CHROMA_PERSIST_DIR, exist_ok=True)
 
-        logger.info("Directories created successfully")
+        logger.info("Required directories created successfully")
 
+        # MongoDB connection
         try:
             await connect_to_mongo()
             logger.info("MongoDB connected successfully")
@@ -75,9 +77,9 @@ async def lifespan(app: FastAPI):
         logger.error(f"Shutdown error: {e}")
 
 
-# =========================
+# =====================================================
 # FastAPI App
-# =========================
+# =====================================================
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
@@ -86,9 +88,9 @@ app = FastAPI(
 )
 
 
-# =========================
-# Rate Limit
-# =========================
+# =====================================================
+# Rate Limiter Config
+# =====================================================
 app.state.limiter = limiter
 
 app.add_exception_handler(
@@ -97,9 +99,9 @@ app.add_exception_handler(
 )
 
 
-# =========================
-# Request Logging
-# =========================
+# =====================================================
+# Request Logging Middleware
+# =====================================================
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
 
@@ -118,9 +120,9 @@ async def log_requests(request: Request, call_next):
     return response
 
 
-# =========================
-# Security Headers
-# =========================
+# =====================================================
+# Security Headers Middleware
+# =====================================================
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
 
@@ -133,9 +135,9 @@ async def add_security_headers(request: Request, call_next):
     return response
 
 
-# =========================
+# =====================================================
 # Global Exception Handler
-# =========================
+# =====================================================
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
 
@@ -149,9 +151,9 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-# =========================
-# CORS
-# =========================
+# =====================================================
+# CORS Middleware
+# =====================================================
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -161,19 +163,23 @@ app.add_middleware(
 )
 
 
-# =========================
+# =====================================================
 # ROUTES
-# =========================
+# =====================================================
+
+# ENABLED ROUTE
 app.include_router(auth.router)
-app.include_router(documents.router)
-app.include_router(chatbot.router)
-app.include_router(analytics.router)
-app.include_router(localization.router)
+
+# TEMPORARILY DISABLED ROUTES
+# app.include_router(documents.router)
+# app.include_router(chatbot.router)
+# app.include_router(analytics.router)
+# app.include_router(localization.router)
 
 
-# =========================
+# =====================================================
 # Root Endpoint
-# =========================
+# =====================================================
 @app.get("/")
 async def root():
 
@@ -184,9 +190,9 @@ async def root():
     }
 
 
-# =========================
+# =====================================================
 # Health Endpoint
-# =========================
+# =====================================================
 @app.get("/health")
 async def health_check():
 

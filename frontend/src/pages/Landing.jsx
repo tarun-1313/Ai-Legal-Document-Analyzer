@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import CinematicOverview from '../components/CinematicOverview';
 import { 
   Shield, CheckCircle2, ArrowRight, MessageSquare, 
   Activity, AlertTriangle, ShieldAlert, Volume2, 
@@ -224,6 +225,9 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* Cinematic Overview (Problem & Solution) */}
+      <CinematicOverview />
 
       {/* 2. AI Upload Demo Section (Interactive workflow) */}
       <section className="py-32 px-6 relative z-10 border-t border-white/5 overflow-hidden">

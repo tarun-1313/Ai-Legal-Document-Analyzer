@@ -147,12 +147,13 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-[#020305] text-white selection:bg-primary/30 relative">
       {/* Cinematic Grid Background */}
-      <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
-        <div className="absolute inset-0" style={{ 
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 bg-[#020305]" />
+        <div className="absolute inset-0 opacity-20" style={{ 
           backgroundImage: `linear-gradient(to right, #1e293b 1px, transparent 1px), linear-gradient(to bottom, #1e293b 1px, transparent 1px)`,
-          backgroundSize: '40px 40px' 
+          backgroundSize: '50px 50px' 
         }} />
-        <div className="absolute inset-0 bg-radial-at-t from-primary/10 via-transparent to-transparent" />
+        <div className="absolute top-0 left-0 w-full h-full bg-radial-at-t from-primary/10 via-transparent to-transparent" />
       </div>
 
       {/* Top Header Bar - Cinematic Upgrade */}
