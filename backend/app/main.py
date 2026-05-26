@@ -7,6 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
+from app.routes import auth, documents, chatbot, analytics, localization
 import os
 import time
 
@@ -171,10 +172,10 @@ app.add_middleware(
 app.include_router(auth.router)
 
 # TEMPORARILY DISABLED ROUTES
-# app.include_router(documents.router)
-# app.include_router(chatbot.router)
-# app.include_router(analytics.router)
-# app.include_router(localization.router)
+app.include_router(documents.router)
+app.include_router(chatbot.router)
+app.include_router(analytics.router)
+app.include_router(localization.router)
 
 
 # =====================================================
