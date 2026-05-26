@@ -6,9 +6,9 @@ Handles user registration, login, and profile retrieval with JWT tokens.
 from fastapi import APIRouter, HTTPException, status, Depends
 from datetime import datetime
 
-from app.database import get_database
-from app.models.user import UserCreate, UserLogin, UserResponse, Token
-from app.utils.auth_utils import hash_password, verify_password, create_access_token, get_current_user
+from ..database import get_database
+from ..models.user import UserCreate, UserLogin, UserResponse, Token    
+from ..utils.auth_utils import hash_password, verify_password, create_access_token, get_current_user
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
