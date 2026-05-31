@@ -8,7 +8,7 @@ const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000') +
 const instance = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
-  timeout: 60000, // 60 second timeout for long AI operations
+  timeout: 180000, // 60 second timeout for long AI operations
 });
 
 // Request interceptor – attach JWT if present
