@@ -3,26 +3,28 @@ FastAPI Main Application
 Entry point for the AI Legal Document Analyzer backend.
 """
 
+import os
+
+# Force CPU mode (Render has no GPU)
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
-
-import os
 import time
 
 from app.config import settings
 from app.database import connect_to_mongo, close_mongo_connection
+from app.services.rag_service import get_embeddings
 
-# TEMPORARILY DISABLED ROUTE IMPORTS
-from app.routes import auth,documents, chatbot, analytics, localization
+from app.routes import auth, documents, chatbot, analytics, localization
 
 from app.utils.logging_utils import setup_logging, get_logger
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-
 
 # =====================================================
 # Logging Setup
@@ -46,7 +48,6 @@ async def lifespan(app: FastAPI):
     logger.info("Starting application startup sequence...")
 
     try:
-
         # Create required directories
         os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
         os.makedirs(settings.CHROMA_PERSIST_DIR, exist_ok=True)
@@ -61,6 +62,24 @@ async def lifespan(app: FastAPI):
         except Exception as mongo_error:
             logger.error(
                 f"MongoDB connection failed: {mongo_error}"
+            )
+
+        # ==========================
+        # PRELOAD EMBEDDING MODEL
+        # ==========================
+        try:
+            logger.info("Loading embedding model...")
+
+            get_embeddings()
+
+            logger.info(
+                "Embedding model loaded successfully"
+            )
+
+        except Exception as embedding_error:
+            logger.error(
+                f"Embedding model loading failed: {embedding_error}",
+                exc_info=True
             )
 
         logger.info(
@@ -85,7 +104,6 @@ async def lifespan(app: FastAPI):
         logger.error(
             f"Shutdown error: {e}"
         )
-
 
 # =====================================================
 # FastAPI App
