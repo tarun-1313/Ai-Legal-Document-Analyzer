@@ -67,7 +67,7 @@ async def lifespan(app: FastAPI):
         # ==========================
         # PRELOAD EMBEDDING MODEL
         # ==========================
-        
+       
 
 # =====================================================
 # FastAPI App
