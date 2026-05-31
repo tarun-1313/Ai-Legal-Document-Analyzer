@@ -7,14 +7,14 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
-from app.routes import auth, documents, chatbot, analytics, localization
+
 import os
 import time
 
 from app.config import settings
 from app.database import connect_to_mongo, close_mongo_connection
 
-# IMPORT ONLY AUTH ROUTE TEMPORARILY
+# TEMPORARILY DISABLED ROUTE IMPORTS
 from app.routes import auth
 
 from app.utils.logging_utils import setup_logging, get_logger
@@ -46,11 +46,12 @@ async def lifespan(app: FastAPI):
     logger.info("Starting application startup sequence...")
 
     try:
+
         # Create required directories
         os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
         os.makedirs(settings.CHROMA_PERSIST_DIR, exist_ok=True)
 
-        logger.info("Required directories created successfully")
+        logger.info("Directories created successfully")
 
         # MongoDB connection
         try:
@@ -58,14 +59,20 @@ async def lifespan(app: FastAPI):
             logger.info("MongoDB connected successfully")
 
         except Exception as mongo_error:
-            logger.error(f"MongoDB connection failed: {mongo_error}")
+            logger.error(
+                f"MongoDB connection failed: {mongo_error}"
+            )
 
         logger.info(
-            f"{settings.APP_NAME} v{settings.APP_VERSION} started successfully"
+            f"{settings.APP_NAME} "
+            f"v{settings.APP_VERSION} started successfully"
         )
 
     except Exception as e:
-        logger.error(f"Startup error: {e}", exc_info=True)
+        logger.error(
+            f"Startup error: {e}",
+            exc_info=True
+        )
 
     yield
 
@@ -75,7 +82,9 @@ async def lifespan(app: FastAPI):
         await close_mongo_connection()
 
     except Exception as e:
-        logger.error(f"Shutdown error: {e}")
+        logger.error(
+            f"Shutdown error: {e}"
+        )
 
 
 # =====================================================
@@ -90,7 +99,7 @@ app = FastAPI(
 
 
 # =====================================================
-# Rate Limiter Config
+# Rate Limiter Configuration
 # =====================================================
 app.state.limiter = limiter
 
@@ -110,10 +119,13 @@ async def log_requests(request: Request, call_next):
 
     response = await call_next(request)
 
-    process_time = (time.time() - start_time) * 1000
+    process_time = (
+        (time.time() - start_time) * 1000
+    )
 
     logger.info(
-        f"{request.method} {request.url.path} "
+        f"{request.method} "
+        f"{request.url.path} "
         f"- {response.status_code} "
         f"({process_time:.2f}ms)"
     )
@@ -129,9 +141,17 @@ async def add_security_headers(request: Request, call_next):
 
     response = await call_next(request)
 
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "DENY"
-    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers[
+        "X-Content-Type-Options"
+    ] = "nosniff"
+
+    response.headers[
+        "X-Frame-Options"
+    ] = "DENY"
+
+    response.headers[
+        "X-XSS-Protection"
+    ] = "1; mode=block"
 
     return response
 
@@ -140,9 +160,15 @@ async def add_security_headers(request: Request, call_next):
 # Global Exception Handler
 # =====================================================
 @app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
+async def global_exception_handler(
+    request: Request,
+    exc: Exception
+):
 
-    logger.error(f"Unhandled error: {str(exc)}", exc_info=True)
+    logger.error(
+        f"Unhandled error: {str(exc)}",
+        exc_info=True
+    )
 
     return JSONResponse(
         status_code=500,
@@ -168,14 +194,8 @@ app.add_middleware(
 # ROUTES
 # =====================================================
 
-# ENABLED ROUTE
-app.include_router(auth.router)
-
 # TEMPORARILY DISABLED ROUTES
-app.include_router(documents.router)
-app.include_router(chatbot.router)
-app.include_router(analytics.router)
-app.include_router(localization.router)
+app.include_router(auth.router)
 
 
 # =====================================================
