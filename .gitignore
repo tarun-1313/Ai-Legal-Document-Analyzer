@@ -13,7 +13,7 @@ node_modules/
 *.pth
 *.safetensors
 legalbert_model/
-models/
+ml_models/
 
 # Uploads
 uploads/
