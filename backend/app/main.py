@@ -183,7 +183,11 @@ async def global_exception_handler(
 # =====================================================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://ai-legal-document-analyzer-six.vercel.app",
+        "http://localhost:5173",
+        "https://ai-legal-document-analyzer-4awrdqokx.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
