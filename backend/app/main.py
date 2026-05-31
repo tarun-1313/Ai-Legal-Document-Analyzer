@@ -39,9 +39,6 @@ logger = get_logger("main")
 limiter = Limiter(key_func=get_remote_address)
 
 
-# =====================================================
-# App Lifespan
-# =====================================================
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
@@ -63,6 +60,29 @@ async def lifespan(app: FastAPI):
             logger.error(
                 f"MongoDB connection failed: {mongo_error}"
             )
+
+        logger.info(
+            f"{settings.APP_NAME} "
+            f"v{settings.APP_VERSION} started successfully"
+        )
+
+    except Exception as e:
+        logger.error(
+            f"Startup error: {e}",
+            exc_info=True
+        )
+
+    yield
+
+    logger.info("Shutting down application...")
+
+    try:
+        await close_mongo_connection()
+
+    except Exception as e:
+        logger.error(
+            f"Shutdown error: {e}"
+        )
 
         # ==========================
         # PRELOAD EMBEDDING MODEL
