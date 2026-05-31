@@ -15,7 +15,7 @@ from app.config import settings
 from app.database import connect_to_mongo, close_mongo_connection
 
 # TEMPORARILY DISABLED ROUTE IMPORTS
-from app.routes import auth,documents, chatbot
+from app.routes import auth,documents, chatbot, analytics
 
 from app.utils.logging_utils import setup_logging, get_logger
 
@@ -198,7 +198,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(documents.router)
 app.include_router(chatbot.router)
-
+app.include_router(analytics.router)
 
 # =====================================================
 # Root Endpoint
