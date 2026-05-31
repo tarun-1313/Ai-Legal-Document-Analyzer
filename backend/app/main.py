@@ -16,7 +16,7 @@ import time
 
 from app.config import settings
 from app.database import connect_to_mongo, close_mongo_connection
-from app.services.rag_service import get_embeddings
+
 
 from app.routes import auth, documents, chatbot, analytics, localization
 
@@ -67,43 +67,7 @@ async def lifespan(app: FastAPI):
         # ==========================
         # PRELOAD EMBEDDING MODEL
         # ==========================
-        try:
-            logger.info("Loading embedding model...")
-
-            get_embeddings()
-
-            logger.info(
-                "Embedding model loaded successfully"
-            )
-
-        except Exception as embedding_error:
-            logger.error(
-                f"Embedding model loading failed: {embedding_error}",
-                exc_info=True
-            )
-
-        logger.info(
-            f"{settings.APP_NAME} "
-            f"v{settings.APP_VERSION} started successfully"
-        )
-
-    except Exception as e:
-        logger.error(
-            f"Startup error: {e}",
-            exc_info=True
-        )
-
-    yield
-
-    logger.info("Shutting down application...")
-
-    try:
-        await close_mongo_connection()
-
-    except Exception as e:
-        logger.error(
-            f"Shutdown error: {e}"
-        )
+        
 
 # =====================================================
 # FastAPI App
