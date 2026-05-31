@@ -84,10 +84,7 @@ async def lifespan(app: FastAPI):
             f"Shutdown error: {e}"
         )
 
-        # ==========================
-        # PRELOAD EMBEDDING MODEL
-        # ==========================
-       
+
 
 # =====================================================
 # FastAPI App
