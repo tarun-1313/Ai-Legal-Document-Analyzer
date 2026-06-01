@@ -197,7 +197,7 @@ app.add_middleware(
 # ROUTES
 # =====================================================
 
-# TEMPORARILY DISABLED ROUTES
+# ENABLED ROUTES
 app.include_router(auth.router)
 app.include_router(documents.router)
 app.include_router(chatbot.router)
