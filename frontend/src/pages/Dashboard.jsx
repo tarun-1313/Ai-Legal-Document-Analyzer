@@ -102,7 +102,7 @@ export default function Dashboard() {
     if (selectedDoc && selectedDoc.status !== 'completed' && selectedDoc.status !== 'failed') {
       interval = setInterval(async () => {
         try {
-          const resp = await axios.get(`/documents/${selectedDoc.id}`);
+          const resp = await axios.get(`/documents/${selectedDoc.id}/status`);
           setSelectedDoc(resp.data);
           
           // If it just finished, refresh the list too
